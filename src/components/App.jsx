@@ -1,71 +1,51 @@
-import React, { useState } from 'react';
+import { Component } from 'react';
+import { FeedbackOptions } from './FeedbackOptions/FeedbackOptions';
+import { Statistics } from './Statistics/Statistics';
+import { Section } from './Section/Section';
+import { Notification } from './Notification/Notification';
 
-const App = () => {
-  const [contacts, setContacts] = useState([]);
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-
-  const handleChange = e => {
-    const { name, value } = e.target;
-    if (name === 'name') {
-      setName(value);
-    } else if (name === 'number') {
-      setNumber(value);
-    }
+export class App extends Component {
+  state = {
+    good: 0,
+    neutral: 0,
+    bad: 0,
   };
 
-  const handleSubmit = e => {
-    e.preventDefault();
-    const newContact = {
-      id: Math.random(),
-      name,
-      number,
-    };
-    setContacts(prevContacts => [...prevContacts, newContact]);
-    setName('');
-    setNumber('');
+  updateState = feedback => {
+    this.setState(prevState => ({ [feedback]: prevState[feedback] + 1 }));
   };
 
-  return (
-    <div>
-      <h1>Phonebook</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name:
-          <input
-            type="text"
-            name="name"
-            value={name}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Number:
-          <input
-            type="tel"
-            name="number"
-            value={number}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <button type="submit">Add contact</button>
-      </form>
-      <h2>Contacts</h2>
-      {contacts.length > 0 ? (
-        <ul>
-          {contacts.map(contact => (
-            <li key={contact.id}>
-              {contact.name}: {contact.number}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No contacts yet.</p>
-      )}
-    </div>
-  );
-};
+  countTotalFeedback() {
+    return this.state.good + this.state.neutral + this.state.bad;
+  }
 
-export default App;
+  countPositiveFeedbackPercentage() {
+    return Math.round((100 / this.countTotalFeedback()) * this.state.good);
+  }
+
+  render() {
+    return (
+      <>
+        <Section title="Please leave feedback">
+          <FeedbackOptions
+            options={Object.keys(this.state)}
+            updateState={this.updateState}
+          />
+        </Section>
+        <Section title="Statistics">
+          {this.countTotalFeedback() !== 0 ? (
+            <Statistics
+              good={this.state.good}
+              neutral={this.state.neutral}
+              bad={this.state.bad}
+              totalFeedback={this.countTotalFeedback()}
+              feedbackPercentage={this.countPositiveFeedbackPercentage()}
+            />
+          ) : (
+            <Notification message="There is no feedback"></Notification>
+          )}
+        </Section>
+      </>
+    );
+  }
+}
